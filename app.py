@@ -1,15 +1,18 @@
 import torch
 from diffusers import FluxPipeline
 
-pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16)
-pipe.enable_model_cpu_offload() #save some VRAM by offloading the model to CPU. Remove this if you have enough GPU power
-pipe = DiffusionPipeline.from_pretrained(
+# Inicjalizacja FluxPipeline z uwierzytelnieniem
+pipe = FluxPipeline.from_pretrained(
     "black-forest-labs/FLUX.1-dev",
     torch_dtype=torch.bfloat16,
-    use_auth_token="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"
+    use_auth_token="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"  # Zastąp swoim rzeczywistym tokenem
 )
 
-prompt = "A cat holding a sign that says hello world"
+# Włączenie przeniesienia na CPU, aby oszczędzić VRAM
+pipe.enable_model_cpu_offload()
+
+# Ustawienie promptu i parametrów generowania
+prompt = "Kot trzymający tabliczkę z napisem hello world"
 image = pipe(
     prompt,
     height=1024,
@@ -19,4 +22,6 @@ image = pipe(
     max_sequence_length=512,
     generator=torch.Generator("cpu").manual_seed(0)
 ).images[0]
+
+# Zapisanie wygenerowanego obrazu
 image.save("flux-dev.png")
