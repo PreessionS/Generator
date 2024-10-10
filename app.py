@@ -6,7 +6,7 @@ from PIL import Image
 import streamlit as st
 
 # Ustaw token Hugging Face jako zmienną środowiskową
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"  # Wklej swój token zamiast hf_your_token_here
+os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"  # Wklej swój token zamiast hf_your_token_here
 
 # Nazwa modelu
 model_name = "black-forest-labs/FLUX.1-dev"
