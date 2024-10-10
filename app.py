@@ -1,27 +1,31 @@
 import torch
-from diffusers import FluxPipeline
+from diffusers import StableDiffusionPipeline
+from PIL import Image
 
-# Inicjalizacja FluxPipeline z uwierzytelnieniem
-pipe = FluxPipeline.from_pretrained(
-    "black-forest-labs/FLUX.1-dev",
-    torch_dtype=torch.bfloat16,
-    use_auth_token="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"  # Zastąp swoim rzeczywistym tokenem
-)
+# Inicjalizacja modelu
+model_id = "runwayml/stable-diffusion-v1-5"  # To jest otwarty model
+pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
 
-# Włączenie przeniesienia na CPU, aby oszczędzić VRAM
-pipe.enable_model_cpu_offload()
+# Jeśli masz GPU, użyj go dla lepszej wydajności
+device = "cuda" if torch.cuda.is_available() else "cpu"
+pipe = pipe.to(device)
 
-# Ustawienie promptu i parametrów generowania
-prompt = "Kot trzymający tabliczkę z napisem hello world"
-image = pipe(
-    prompt,
-    height=1024,
-    width=1024,
-    guidance_scale=3.5,
-    num_inference_steps=50,
-    max_sequence_length=512,
-    generator=torch.Generator("cpu").manual_seed(0)
-).images[0]
+# Funkcja do generowania obrazu
+def generuj_obraz(prompt, nazwa_pliku="wygenerowany_obraz.png", seed=None):
+    if seed is not None:
+        generator = torch.Generator(device=device).manual_seed(seed)
+    else:
+        generator = None
+    
+    image = pipe(prompt, generator=generator).images[0]
+    image.save(nazwa_pliku)
+    print(f"Obraz zapisany jako {nazwa_pliku}")
+    return image
 
-# Zapisanie wygenerowanego obrazu
-image.save("flux-dev.png")
+# Przykładowe użycie
+prompt = "Kot siedzący na księżycu, styl artystyczny"
+generuj_obraz(prompt, "kot_na_ksiezycu.png", seed=42)
+
+# Możesz generować więcej obrazów, zmieniając prompt
+prompt2 = "Futurystyczne miasto nocą, neony, deszcz"
+generuj_obraz(prompt2, "futurystyczne_miasto.png")
