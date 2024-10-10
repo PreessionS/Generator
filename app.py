@@ -4,9 +4,15 @@ import torch
 from PIL import Image
 
 # Ładowanie modelu DiffusionPipeline
+from diffusers import DiffusionPipeline
+import torch
+
 model_name = "black-forest-labs/FLUX.1-dev"
-pipe = DiffusionPipeline.from_pretrained(model_name, torch_dtype=torch.float32)
-pipe = pipe.to("cpu")  # Upewnij się, że model działa na CPU, jeśli Streamlit nie ma dostępu do GPU
+pipe = DiffusionPipeline.from_pretrained(
+    model_name,
+    torch_dtype=torch.float32,
+    use_auth_token="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"
+)
 
 # Interfejs użytkownika Streamlit
 st.title("Generator obrazów z Diffusers na Streamlit")
