@@ -1,38 +1,22 @@
-# app.py
-import os
 import torch
-from diffusers import DiffusionPipeline
-from PIL import Image
-import streamlit as st
+from diffusers import FluxPipeline
 
-# Ustaw token Hugging Face jako zmienną środowiskową
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"  # Wklej swój token zamiast hf_your_token_here
+# Ładowanie modelu Flux Schnell
+pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-schnell", torch_dtype=torch.bfloat16)
+pipe.enable_model_cpu_offload()
 
-# Nazwa modelu
-model_name = "black-forest-labs/FLUX.1-dev"
+# Ustalanie opisu do generacji obrazu
+prompt = "A cat holding a sign that says hello world"
 
-# Inicjalizacja pipeline z modelem FLUX.1
-pipe = DiffusionPipeline.from_pretrained(
-    model_name,
-    torch_dtype=torch.bfloat16,
-    use_auth_token=True
-)
-pipe.enable_model_cpu_offload()  # Wymagane dla oszczędności pamięci VRAM
+# Generowanie obrazu
+out = pipe(
+    prompt=prompt,
+    guidance_scale=0.0,
+    height=768,
+    width=1360,
+    num_inference_steps=4,
+    max_sequence_length=256,
+).images[0]
 
-# Aplikacja Streamlit
-st.title("FLUX.1 Image Generator")
-prompt = st.text_input("Wpisz opis obrazu:", value="Astronaut in a jungle, cold color palette, muted colors, detailed, 8k")
-
-if st.button("Generuj obraz"):
-    with st.spinner("Generowanie obrazu..."):
-        # Generowanie obrazu na podstawie promptu
-        image = pipe(
-            prompt,
-            height=512,  # Możesz dostosować wysokość
-            width=512,   # Możesz dostosować szerokość
-            guidance_scale=7.5,
-            num_inference_steps=50
-        ).images[0]
-
-        # Wyświetlanie obrazu
-        st.image(image, caption="Wygenerowany obraz", use_column_width=True)
+# Zapisanie wygenerowanego obrazu
+out.save("image.png")
