@@ -1,22 +1,23 @@
+import streamlit as st
+from diffusers import AutoPipelineForText2Image
 import torch
-from diffusers import FluxPipeline
 
-# Ładowanie modelu Flux Schnell
-pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-schnell", torch_dtype=torch.bfloat16)
-pipe.enable_model_cpu_offload()
+@st.cache_resource
+def load_model():
+    pipeline = AutoPipelineForText2Image.from_pretrained(
+        'black-forest-labs/FLUX.1-schnell', 
+        torch_dtype=torch.bfloat16
+    )
+    pipeline.load_lora_weights('hugovntr/flux-schnell-realism', weight_name='schnell-realism_v1')
+    return pipeline
 
-# Ustalanie opisu do generacji obrazu
-prompt = "A cat holding a sign that says hello world"
+st.title("FLUX.1-schnell Image Generator")
 
-# Generowanie obrazu
-out = pipe(
-    prompt=prompt,
-    guidance_scale=0.0,
-    height=768,
-    width=1360,
-    num_inference_steps=4,
-    max_sequence_length=256,
-).images[0]
+pipeline = load_model()
 
-# Zapisanie wygenerowanego obrazu
-out.save("image.png")
+prompt = st.text_input("Enter your prompt:", "Moody kitchen at dusk, warm golden light")
+
+if st.button("Generate Image"):
+    with st.spinner("Generating image..."):
+        image = pipeline(prompt).images[0]
+    st.image(image, caption="Generated Image", use_column_width=True)
