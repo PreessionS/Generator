@@ -1,31 +1,38 @@
+# app.py
+import os
 import torch
-from diffusers import StableDiffusionPipeline
+from diffusers import DiffusionPipeline
 from PIL import Image
+import streamlit as st
 
-# Inicjalizacja modelu
-model_id = "runwayml/stable-diffusion-v1-5"  # To jest otwarty model
-pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
+# Ustaw token Hugging Face jako zmienną środowiskową
+os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"  # Wklej swój token zamiast hf_your_token_here
 
-# Jeśli masz GPU, użyj go dla lepszej wydajności
-device = "cuda" if torch.cuda.is_available() else "cpu"
-pipe = pipe.to(device)
+# Nazwa modelu
+model_name = "black-forest-labs/FLUX.1-dev"
 
-# Funkcja do generowania obrazu
-def generuj_obraz(prompt, nazwa_pliku="wygenerowany_obraz.png", seed=None):
-    if seed is not None:
-        generator = torch.Generator(device=device).manual_seed(seed)
-    else:
-        generator = None
-    
-    image = pipe(prompt, generator=generator).images[0]
-    image.save(nazwa_pliku)
-    print(f"Obraz zapisany jako {nazwa_pliku}")
-    return image
+# Inicjalizacja pipeline z modelem FLUX.1
+pipe = DiffusionPipeline.from_pretrained(
+    model_name,
+    torch_dtype=torch.bfloat16,
+    use_auth_token=True
+)
+pipe.enable_model_cpu_offload()  # Wymagane dla oszczędności pamięci VRAM
 
-# Przykładowe użycie
-prompt = "Kot siedzący na księżycu, styl artystyczny"
-generuj_obraz(prompt, "kot_na_ksiezycu.png", seed=42)
+# Aplikacja Streamlit
+st.title("FLUX.1 Image Generator")
+prompt = st.text_input("Wpisz opis obrazu:", value="Astronaut in a jungle, cold color palette, muted colors, detailed, 8k")
 
-# Możesz generować więcej obrazów, zmieniając prompt
-prompt2 = "Futurystyczne miasto nocą, neony, deszcz"
-generuj_obraz(prompt2, "futurystyczne_miasto.png")
+if st.button("Generuj obraz"):
+    with st.spinner("Generowanie obrazu..."):
+        # Generowanie obrazu na podstawie promptu
+        image = pipe(
+            prompt,
+            height=512,  # Możesz dostosować wysokość
+            width=512,   # Możesz dostosować szerokość
+            guidance_scale=7.5,
+            num_inference_steps=50
+        ).images[0]
+
+        # Wyświetlanie obrazu
+        st.image(image, caption="Wygenerowany obraz", use_column_width=True)
