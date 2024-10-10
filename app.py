@@ -10,8 +10,7 @@ st.set_page_config(page_title="Text to Image Generator", page_icon="🖼️", la
 @st.cache_resource
 def load_model():
     model_id = "runwayml/stable-diffusion-v1-5"
-    pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float16)
-    pipe = pipe.to("cuda")
+    pipe = StableDiffusionPipeline.from_pretrained(model_id, torch_dtype=torch.float32)
     return pipe
 
 # Tytuł aplikacji
@@ -32,7 +31,7 @@ if st.button("Generate Image(s)"):
         try:
             with st.spinner("Generating image(s)... This may take a minute."):
                 images = pipe(
-                    [prompt] * num_images,
+                    prompt=[prompt] * num_images,
                     guidance_scale=guidance_scale,
                     num_inference_steps=num_inference_steps
                 ).images
