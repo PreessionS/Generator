@@ -1,30 +1,17 @@
-import streamlit as st
-from diffusers import DiffusionPipeline
 import torch
-from PIL import Image
+from diffusers import FluxPipeline
 
-# Ładowanie modelu DiffusionPipeline
-from diffusers import DiffusionPipeline
-import torch
+pipe = FluxPipeline.from_pretrained("black-forest-labs/FLUX.1-dev", torch_dtype=torch.bfloat16)
+pipe.enable_model_cpu_offload() #save some VRAM by offloading the model to CPU. Remove this if you have enough GPU power
 
-model_name = "black-forest-labs/FLUX.1-dev"
-pipe = DiffusionPipeline.from_pretrained(
-    model_name,
-    torch_dtype=torch.float32,
-    use_auth_token="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"
-)
-
-# Interfejs użytkownika Streamlit
-st.title("Generator obrazów z Diffusers na Streamlit")
-
-# Wprowadzanie promptu
-prompt = st.text_input("Wprowadź opis obrazu:", "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k")
-
-# Przycisk do generowania obrazu
-if st.button("Generuj obraz"):
-    if prompt:
-        with st.spinner("Generowanie obrazu..."):
-            image = pipe(prompt).images[0]  # Generowanie obrazu na podstawie promptu
-            st.image(image, caption="Wygenerowany obraz", use_column_width=True)
-    else:
-        st.write("Wprowadź opis obrazu, aby wygenerować obraz.")
+prompt = "A cat holding a sign that says hello world"
+image = pipe(
+    prompt,
+    height=1024,
+    width=1024,
+    guidance_scale=3.5,
+    num_inference_steps=50,
+    max_sequence_length=512,
+    generator=torch.Generator("cpu").manual_seed(0)
+).images[0]
+image.save("flux-dev.png")
