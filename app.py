@@ -1,20 +1,20 @@
 import streamlit as st
-from diffusers import StableDiffusionPipeline
+from diffusers import DiffusionPipeline
 import torch
 from PIL import Image
 
-# Załaduj model Diffusers
-model_name = "runwayml/stable-diffusion-v1-5"  # Możesz wybrać inny model dostępny w diffusers
-pipe = StableDiffusionPipeline.from_pretrained(model_name, torch_dtype=torch.float32)
-pipe = pipe.to("cpu")  # Upewnij się, że model działa na CPU
+# Ładowanie modelu DiffusionPipeline
+model_name = "black-forest-labs/FLUX.1-dev"
+pipe = DiffusionPipeline.from_pretrained(model_name, torch_dtype=torch.float32)
+pipe = pipe.to("cpu")  # Upewnij się, że model działa na CPU, jeśli Streamlit nie ma dostępu do GPU
 
-# Interfejs aplikacji
+# Interfejs użytkownika Streamlit
 st.title("Generator obrazów z Diffusers na Streamlit")
 
 # Wprowadzanie promptu
-prompt = st.text_input("Wprowadź opis obrazu:")
+prompt = st.text_input("Wprowadź opis obrazu:", "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k")
 
-# Generowanie obrazu
+# Przycisk do generowania obrazu
 if st.button("Generuj obraz"):
     if prompt:
         with st.spinner("Generowanie obrazu..."):
