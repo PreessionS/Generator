@@ -1,5 +1,4 @@
-streamlit==1.39.0
-transformers==4.45.2
-diffusers==0.30.3
-sentencepiece==0.1.96
-torch==2.4.1
+streamlit
+torch
+transformers
+diffusers
