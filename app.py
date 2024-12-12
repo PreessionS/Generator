@@ -4,18 +4,24 @@ import sys
 import torch
 from PIL import Image
 import os
+from huggingface_hub import login
 
 # Konfiguracja środowiska przed importem diffusers
 os.environ['TRANSFORMERS_CACHE'] = '/tmp/transformers_cache'
 os.environ['HF_HOME'] = '/tmp/hf_home'
 
-# Sprawdzenie wersji Pythona
-st.write(f"Python version: {sys.version}")
+# Pobierz token HF z secrets
+def init_huggingface():
+    try:
+        hf_token = st.secrets["hf_token"]
+        login(token=hf_token)
+        st.success("Successfully logged in to Hugging Face")
+    except Exception as e:
+        st.error(f"Error logging in to Hugging Face: {str(e)}")
+        st.stop()
 
-# Informacja o dostępności CUDA
-st.write(f"CUDA available: {torch.cuda.is_available()}")
-if torch.cuda.is_available():
-    st.write(f"CUDA device: {torch.cuda.get_device_name(0)}")
+# Inicjalizacja HF na starcie
+init_huggingface()
 
 try:
     from diffusers import DiffusionPipeline
@@ -30,7 +36,8 @@ def load_model():
         pipe = DiffusionPipeline.from_pretrained(
             "black-forest-labs/FLUX.1-dev",
             torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-            cache_dir='/tmp/model_cache'
+            cache_dir='/tmp/model_cache',
+            use_auth_token=True  # Używamy uwierzytelniania
         )
         
         # Załadowanie wag LoRA
