@@ -1,24 +1,48 @@
+# app.py
 import streamlit as st
 from diffusers import DiffusionPipeline
+import torch
+from PIL import Image
+import os
 
-# Funkcja do generowania obrazów
-@st.cache_resource
-def load_pipeline():
-    st.info("Loading model. This may take some time...")
-    pipe = DiffusionPipeline.from_pretrained("black-forest-labs/FLUX.1-dev")
+def load_model():
+    # Inicjalizacja modelu
+    pipe = DiffusionPipeline.from_pretrained(
+        "black-forest-labs/FLUX.1-dev",
+        torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
+    )
+    
+    # Załadowanie wag LoRA
     pipe.load_lora_weights("xey/sldr_flux_nsfw_v2-studio")
+    
+    if torch.cuda.is_available():
+        pipe = pipe.to("cuda")
     return pipe
 
-pipe = load_pipeline()
+def generate_image(pipe, prompt):
+    # Generowanie obrazu
+    image = pipe(prompt).images[0]
+    return image
 
-# Interfejs użytkownika
-st.title("AI Image Generator")
-st.write("Generate images using the FLUX.1-dev model!")
+def main():
+    st.title("Generator obrazów AI")
+    
+    # Inicjalizacja modelu przy pierwszym uruchomieniu
+    if 'model' not in st.session_state:
+        with st.spinner('Ładowanie modelu...'):
+            st.session_state.model = load_model()
+    
+    # Interface użytkownika
+    prompt = st.text_area("Wprowadź opis obrazu:", 
+                         "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k")
+    
+    if st.button('Generuj obraz'):
+        with st.spinner('Generowanie obrazu...'):
+            try:
+                image = generate_image(st.session_state.model, prompt)
+                st.image(image, caption='Wygenerowany obraz')
+            except Exception as e:
+                st.error(f"Wystąpił błąd podczas generowania: {str(e)}")
 
-prompt = st.text_input("Enter your prompt:", "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k")
-
-if st.button("Generate Image"):
-    with st.spinner("Generating image..."):
-        image = pipe(prompt).images[0]
-        st.image(image, caption="Generated Image", use_column_width=True)
-        st.success("Image generated successfully!")
+if __name__ == "__main__":
+    main()
