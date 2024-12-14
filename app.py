@@ -40,12 +40,11 @@ def init_huggingface():
 @st.cache_resource
 def load_model():
     try:
-        from diffusers import StableDiffusionPipeline
+        from diffusers import DiffusionPipeline
         
-        pipe = StableDiffusionPipeline.from_pretrained(
+        pipe = DiffusionPipeline.from_pretrained(
             "black-forest-labs/FLUX.1-dev",
-            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32,
-            safety_checker=None
+            torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
         )
         
         # Ładowanie wag LoRA
@@ -60,7 +59,6 @@ def load_model():
         return pipe
     except Exception as e:
         st.error(f"Error loading model: {str(e)}")
-        st.error("Full error:", exc_info=True)
         return None
 
 # Główna funkcja generowania obrazu
@@ -74,7 +72,6 @@ def generate_image(pipe, prompt, num_steps=20):
         return image
     except Exception as e:
         st.error(f"Error generating image: {str(e)}")
-        st.error("Full error:", exc_info=True)
         return None
 
 def main():
