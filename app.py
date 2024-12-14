@@ -7,6 +7,12 @@ def main():
     st.title("Generator obrazów AI")
     st.write("Użyj modelu FLUX.1 do generowania obrazów")
 
+    # Input dla tokenu HuggingFace
+    hf_token = st.text_input("Wprowadź token HuggingFace:", type="password")
+    if not hf_token:
+        st.warning("Potrzebujesz tokenu HuggingFace aby używać tego modelu. Możesz go wygenerować na stronie https://huggingface.co/settings/tokens")
+        return
+
     # Input dla promptu
     prompt = st.text_area("Wprowadź prompt:", 
                          "Astronaut in a jungle, cold color palette, muted colors, detailed, 8k",
@@ -16,10 +22,11 @@ def main():
     if st.button("Generuj obraz"):
         with st.spinner("Ładowanie modelu i generowanie obrazu..."):
             try:
-                # Inicjalizacja pipeline
+                # Inicjalizacja pipeline z tokenem
                 pipe = DiffusionPipeline.from_pretrained(
                     "black-forest-labs/FLUX.1-dev",
-                    torch_dtype=torch.float16
+                    torch_dtype=torch.float16,
+                    use_auth_token=hf_token
                 )
                 
                 # Przeniesienie na GPU jeśli dostępne
